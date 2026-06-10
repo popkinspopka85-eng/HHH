@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber Pulse</title>
+    <style>
+        body { background: #060409; color: #fff; font-family: sans-serif; text-align: center; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; box-sizing: border-box; }
+        .score { font-size: 24px; font-weight: bold; color: #00f2fe; margin-top: 20px; }
+        .container { flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+        canvas { background: transparent; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(6,4,9,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+        .btn { padding: 16px 32px; border-radius: 14px; border: none; font-size: 16px; font-weight: bold; background: linear-gradient(135deg, #00f2fe 0%, #0072ff 100%); color: #000; cursor: pointer; width: 80%; max-width: 260px; }
+    </style>
+</head>
+<body>
+    <div class="score">Счет: <span id="score-val">0</span></div>
+    <div class="container">
+        <canvas id="game" width="300" height="300"></canvas>
+        <div id="overlay" class="overlay"><button id="start-btn" class="btn">ПОЕХАЛИ</button></div>
+    </div>
+    <div style="color: #444; font-size: 12px; margin-bottom: 20px;">ТАПАЙ ВНУТРИ ЗЕЛЕНОГО СЕКТОРА</div>
+    <script>
+        window.addEventListener('load', () => {
+            const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
+            const overlay = document.getElementById('overlay'), startBtn = document.getElementById('start-btn'), scoreEl = document.getElementById('score-val');
+            let score = 0, isPlaying = false, targetAngle = 0, targetWidth = 0.6, ballAngle = 0, ballSpeed = 0.04, radius = 90;
+            function draw() {
+                ctx.clearRect(0, 0, 300, 300);
+                ctx.beginPath(); ctx.arc(150, 150, radius, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 10; ctx.stroke();
+                ctx.beginPath(); ctx.arc(150, 150, radius, targetAngle - targetWidth/2, targetAngle + targetWidth/2); ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 14; ctx.stroke();
+                if (isPlaying) { ballAngle += ballSpeed; if (ballAngle > Math.PI * 2) ballAngle -= Math.PI * 2; }
+                ctx.beginPath(); ctx.arc(150 + Math.cos(ballAngle)*radius, 150 + Math.sin(ballAngle)*radius, 9, 0, Math.PI * 2); ctx.fillStyle = '#ff007f'; ctx.fill();
+                requestAnimationFrame(draw);
+            }
+            function tap(e) {
+                if (!isPlaying) return; if(e) e.preventDefault();
+                let diff = ballAngle - targetAngle;
+                while (diff < -Math.PI) diff += Math.PI * 2; while (diff > Math.PI) diff -= Math.PI * 2;
+                if (Math.abs(diff) <= targetWidth / 2) { score++; scoreEl.innerText = score; ballSpeed = Math.min(0.09, 0.04 + (score * 0.003)); targetAngle = Math.random() * Math.PI * 2; }
+                else { isPlaying = false; startBtn.innerText = "ПРОМАХ! ЕЩЕ РАЗ"; overlay.style.display = "flex"; }
+            }
+            canvas.addEventListener('touchstart', tap, {passive: false}); canvas.addEventListener('mousedown', tap);
+            startBtn.addEventListener('click', () => { score = 0; scoreEl.innerText = 0; ballSpeed = 0.04; overlay.style.display = "none"; setTimeout(() => isPlaying = true, 100); targetAngle = Math.random() * Math.PI * 2; });
+            draw();
+        });
+    </script>
+</body>
+</html>
